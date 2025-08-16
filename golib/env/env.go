@@ -1,26 +1,9 @@
 package env
 
 import (
+	"fmt"
 	"math/rand"
-
-	mapset "github.com/deckarep/golang-set/v2"
 )
-
-type Layer [][]float32
-type Point struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type Sneak struct {
-	Body      []Point
-	Head      Point
-	Length    int
-	Health    int
-	Alive     bool
-	BodyLayer Layer
-	HeadLayer Layer
-}
 
 type Setting struct {
 	Width           int   `json:"width"`
@@ -73,228 +56,128 @@ type GameContext struct {
 
 type Client struct {
 	onStartCallback   func(ctx *GameContext)
-	onMoveCallback    func(ctx *GameContext, board *Board, snake *Sneak) int
-	onTurnEndCallback func(ctx *GameContext, board *Board, snake *Sneak, result uint32)
+	onMoveCallback    func(ctx *GameContext, board *Board, snake *Snake) int
+	onTurnEndCallback func(ctx *GameContext, board *Board, snake *Snake, result uint32)
 }
 
 func NewGame(setting Setting) *Game {
-	gameMap := Board{
-		Width:     setting.Width,
-		Height:    setting.Height,
-		Food:      mapset.NewSet[Point](),
-		Snakes:    make([]Sneak, 0),
-		FoodLayer: newLayer(setting.Width, setting.Height),
-	}
 	return &Game{
 		Setting: setting,
-		Board:   gameMap,
+		Board:   *NewBoard(setting.Width, setting.Height),
 		Rand:    NewStandardRand(setting.Seed),
 	}
 }
 
-func (g *Game) Execute(moves []Direction) []uint32 {
+func (g *Game) Execute(moves []Direction) ([]uint32, error) {
+	if len(moves) != len(g.Board.Snakes) {
+		return nil, fmt.Errorf("number of moves (%d) does not match number of snakes (%d)", len(moves), len(g.Board.Snakes))
+	}
+
 	result := make([]uint32, len(g.Board.Snakes))
-	eatenFood := mapset.NewSet[Point]()
 	aliveSnakeCount := 0
 	eliminatedSnakeCount := 0
-	for i, snake := range g.Board.Snakes {
+
+	vBoard := g.Board.Copy() // Create a copy of the board to avoid modifying the original during the turn
+	for i := range g.Board.Snakes {
+		snake := &vBoard.Snakes[i]
 		if !snake.Alive {
 			continue // Skip dead snakes
 		}
 		aliveSnakeCount++
-		if i < len(moves) {
-			move := moves[i]
-			nextHead := snake.Head
-			nextHead.move(move)
-			println("Snake", i, "moving to (", nextHead.X, ",", nextHead.Y, ")")
-			// Check if the snake eats food
-			eaten := g.Board.FoodLayer.getValue(nextHead.X, nextHead.Y) != 0
-			snake.move(nextHead, eaten)
-			if eaten {
-				eatenFood.Add(nextHead) // Add the food to the eaten set
-				result[i] |= TurnResultFoodEaten
-			}
-			g.Board.Snakes[i] = snake // Update the snake in the map
-		}
-	}
-	// Remove eaten food from the board
-	g.Board.Food = g.Board.Food.Difference(eatenFood)
 
-	// Update the food layer
-	for food := range eatenFood.Iter() {
-		g.Board.FoodLayer.setValue(food.X, food.Y, 0.0)
-	}
-	deadByCollision := make([]bool, len(g.Board.Snakes))
-	drawPossible := make([]bool, len(g.Board.Snakes))
-	// Check for collisions
-	for i, snake := range g.Board.Snakes {
-		if !snake.Alive {
-			continue // Skip dead snakes
-		}
-		// Check for starvation
-		if snake.Health <= 0 {
+		move := moves[i]
+		nextHead := snake.Head.getMovedPoint(move)
+		println("Snake", i, "moving to (", nextHead.X, ",", nextHead.Y, ")")
+		// Check if the snake eats food
+		eaten := g.Board.isFood(nextHead)
+		snake.move(nextHead, eaten)
+		if eaten {
+			result[i] |= TurnResultFoodEaten
+			vBoard.Food.Remove(nextHead)
+			println("Snake", i, "has eaten food at (", nextHead.X, ",", nextHead.Y, ")")
+		} else if snake.Health <= 0 {
 			result[i] |= TurnResultStarvation
-			println("Snake has starved")
+			println("Snake", i, "has starved")
 			snake.Alive = false // Snake dies from starvation
 			eliminatedSnakeCount++
-			g.Board.Snakes[i] = snake // Update the snake in the map
-			drawPossible[i] = true    // Mark as draw possible
 			continue
 		}
+
 		// Check for wall collisions
 		if snake.Head.X < 0 || snake.Head.X >= g.Board.Width || snake.Head.Y < 0 || snake.Head.Y >= g.Board.Height {
 			result[i] |= TurnResultWallCollision
 			println("Collision detected with wall")
 			snake.Alive = false // Snake dies on wall collision
 			eliminatedSnakeCount++
-			g.Board.Snakes[i] = snake // Update the snake in the map
-			drawPossible[i] = true
-			continue
 		}
-		// Check for body collisions
-		for j, otherSnake := range g.Board.Snakes {
-			if !deadByCollision[i] && otherSnake.Alive {
-				if otherSnake.BodyLayer.getValue(snake.Head.X, snake.Head.Y) != 0 {
-					if i == j {
-						result[i] |= TurnResultSelfCollision
-						println("Self-collision detected")
-					} else {
-						result[i] |= TurnResultSnakeCollision
-						println("Collision detected with another snake's body")
-					}
-					deadByCollision[i] = true
-					drawPossible[i] = true // Mark as draw possible
-					eliminatedSnakeCount++
-				}
-			}
+	}
+	// Update the board
+	g.Board = vBoard.Copy()
+
+	// Check for collisions
+	for i := range g.Board.Snakes {
+		snake := &g.Board.Snakes[i]
+		vsnake := &vBoard.Snakes[i]
+		if !vsnake.Alive {
+			continue // Skip dead snakes
 		}
 
-		// Check for head collisions
-		for j, otherSnake := range g.Board.Snakes {
-			if !deadByCollision[i] && otherSnake.Alive && i != j {
-				if snake.Head.X == otherSnake.Head.X && snake.Head.Y == otherSnake.Head.Y {
-					if snake.Length <= otherSnake.Length {
-						result[i] |= TurnResultHeadCollision
-						println(i, j, "Head collision detected with another snake's head")
-						if snake.Length == otherSnake.Length {
-							drawPossible[i] = true // Mark as draw possible
-						}
-						deadByCollision[i] = true
+		if collidedSnake, selfCollision, headCollision := g.Board.getCollision(snake); collidedSnake != nil {
+			if selfCollision {
+				result[i] |= TurnResultSelfCollision
+				println("Self-collision detected")
+				vsnake.Alive = false
+				eliminatedSnakeCount++
+			} else if headCollision {
+				if snake.Length <= collidedSnake.Length {
+					result[i] |= TurnResultHeadCollision
+					println(i, "Head collision detected with another snake's head")
+					if snake.Length == collidedSnake.Length && vBoard.Snakes[collidedSnake.Id].Alive {
+						result[collidedSnake.Id] |= TurnResultHeadCollision
+						vBoard.Snakes[collidedSnake.Id].Alive = false
 						eliminatedSnakeCount++
-						break
-					} else {
-						println(i, j, "Head collision detected with another snake's head, but this snake is longer")
 					}
+					vsnake.Alive = false
+					eliminatedSnakeCount++
+				} else {
+					println(i, "Head collision detected with another snake's head, but this snake is longer")
 				}
+			} else {
+				result[i] |= TurnResultSnakeCollision
+				println("Collision detected with another snake's body")
+				vsnake.Alive = false
+				eliminatedSnakeCount++
 			}
 		}
 	}
 
-	// Update the alive status of snakes based on collisions
+	g.Board = vBoard // Update the original board with the modified state
+
 	for i, snake := range g.Board.Snakes {
-		if deadByCollision[i] {
-			snake.Alive = false // Snake dies from collision
-			println("Snake has died due to collision")
-		}
-		if snake.Alive {
-			result[i] |= TurnResultAlive
-			if aliveSnakeCount-eliminatedSnakeCount == 1 {
-				result[i] |= TurnResultWin // If this snake is the only one alive, it wins
+		if !snake.Alive {
+			result[i] |= TurnResultDead
+			println("Snake", i, "is dead")
+			if aliveSnakeCount == eliminatedSnakeCount {
+				result[i] |= TurnResultDraw
+				println("All snakes are dead, the game is a draw")
 			} else {
-				result[i] |= TurnResultContinue // Snake is still alive and game continues
+				result[i] |= TurnResultLoss
+				println("Snake", i, "has lost the game")
 			}
 		} else {
-			result[i] |= TurnResultDead
-			if aliveSnakeCount == eliminatedSnakeCount {
-				if drawPossible[i] {
-					result[i] |= TurnResultDraw // If all snakes are dead and this one is marked
-				} else {
-					result[i] |= TurnResultLoss // If all snakes are dead and this one is not marked, it loses
-				}
+			result[i] |= TurnResultAlive
+			println("Snake", i, "is alive")
+			if aliveSnakeCount-eliminatedSnakeCount == 1 {
+				result[i] |= TurnResultWin
+				println("Snake", i, "has won the game")
 			} else {
-				result[i] |= TurnResultLoss // If this snake is dead but others are alive, it loses
+				result[i] |= TurnResultContinue
+				println("Snake", i, "continues to the next turn")
 			}
 		}
-		g.Board.Snakes[i] = snake // Update the snake in the map
-	}
-	return result
-}
-
-func (s *Sneak) move(nextHead Point, eaten bool) {
-	if !s.Alive {
-		println("Error: Cannot move a dead snake")
-		return // Snake is dead, cannot move
-	}
-	if len(s.Body) == 0 {
-		println("Error: Snake has no body to move")
-		return // No body to move
 	}
 
-	// Move the body
-	if eaten {
-		s.Body = append([]Point{nextHead}, s.Body...)
-		s.Health = 100
-		s.Length += 1
-	} else {
-		tail := s.Body[len(s.Body)-1]
-		if len(s.Body) <= 1 || !tail.Equal(s.Body[len(s.Body)-2]) {
-			s.BodyLayer.setValue(tail.X, tail.Y, 0.0)
-		}
-		s.Body = append([]Point{nextHead}, s.Body[:len(s.Body)-1]...)
-		s.Health -= 1
-	}
-	// clear the previous head layer value
-	s.HeadLayer.setValue(s.Head.X, s.Head.Y, 0.0)
-
-	// Set the new layer value
-	if s.Length > 1 {
-		s.BodyLayer.setValue(s.Head.X, s.Head.Y, 1.0)
-	}
-	s.HeadLayer.setValue(nextHead.X, nextHead.Y, 1.0)
-	s.Head = nextHead
-}
-
-func newLayer(width, height int) Layer {
-	layer := make([][]float32, height)
-	for i := range layer {
-		(layer)[i] = make([]float32, width)
-	}
-	return layer
-}
-
-func (l *Layer) setValue(x, y int, value float32) {
-	// Check if the coordinates are within bounds
-	if x < 0 || x >= len((*l)[0]) || y < 0 || y >= len(*l) {
-		println("Error: Coordinates out of bounds")
-		return // Out of bounds
-	}
-	(*l)[y][x] = value
-}
-
-func (l *Layer) getValue(x, y int) float32 {
-	// Check if the coordinates are within bounds
-	if x < 0 || x >= len((*l)[0]) || y < 0 || y >= len(*l) {
-		println("Error: Coordinates out of bounds")
-		return 0.0 // Out of bounds
-	}
-	return (*l)[y][x]
-}
-
-func (p *Point) move(direction Direction) {
-	switch direction {
-	case Up:
-		p.Y++
-	case Down:
-		p.Y--
-	case Left:
-		p.X--
-	case Right:
-		p.X++
-	}
-}
-
-func (p *Point) Equal(other Point) bool {
-	return p.X == other.X && p.Y == other.Y
+	return result, nil
 }
 
 func foodDemand(numCurrentFood int, setting Setting) int {

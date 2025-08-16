@@ -1,45 +1,143 @@
 package env
 
-import mapset "github.com/deckarep/golang-set/v2"
+import (
+	"slices"
+
+	mapset "github.com/deckarep/golang-set/v2"
+)
 
 type Board struct {
-	Width     int
-	Height    int
-	Food      mapset.Set[Point]
-	Snakes    []Sneak
-	FoodLayer Layer
-	Layer     BoardLayers
+	Width  int
+	Height int
+	Food   mapset.Set[Point]
+	Snakes []Snake
 }
 
-type BoardLayers struct {
-	FoodLayer  Layer
-	SnakeLayer []SnakeLayer
+type Layer [][]int
+
+type Point struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+type Snake struct {
+	Id     int
+	Body   []Point
+	Head   Point
+	Length int
+	Health int
+	Alive  bool
 }
 
-type SnakeLayer struct {
-	BodyLayer Layer
-	HeadLayer Layer
+//func newLayer(width, height int) Layer {
+//	layer := make([][]int, height)
+//	for i := range layer {
+//		(layer)[i] = make([]int, width)
+//	}
+//	return layer
+//}
+//
+//func (l *Layer) setValue(x, y int, value int) {
+//	// Check if the coordinates are within bounds
+//	if x < 0 || x >= len((*l)[0]) || y < 0 || y >= len(*l) {
+//		println("Error: Coordinates out of bounds")
+//		return // Out of bounds
+//	}
+//	(*l)[y][x] = value
+//}
+//
+//func (l *Layer) getValue(x, y int) int {
+//	// Check if the coordinates are within bounds
+//	if x < 0 || x >= len((*l)[0]) || y < 0 || y >= len(*l) {
+//		println("Error: Coordinates out of bounds")
+//		return 0.0 // Out of bounds
+//	}
+//	return (*l)[y][x]
+//}
+//
+//func (l *Layer) addValue(x, y int, value int) {
+//	// Check if the coordinates are within bounds
+//	if x < 0 || x >= len((*l)[0]) || y < 0 || y >= len(*l) {
+//		println("Error: Coordinates out of bounds")
+//		return // Out of bounds
+//	}
+//	(*l)[y][x] += value
+//}
+
+func (s *Snake) move(nextHead Point, eaten bool) {
+	if !s.Alive {
+		println("Error: Cannot getMovedPoint a dead snake")
+		return // Snake is dead, cannot getMovedPoint
+	}
+	if len(s.Body) == 0 {
+		println("Error: Snake has no body to getMovedPoint")
+		return // No body to getMovedPoint
+	}
+
+	// getMovedPoint the body
+	if eaten {
+		s.Body = append([]Point{nextHead}, s.Body...)
+		s.Health = 100
+		s.Length += 1
+	} else {
+		s.Body = append([]Point{nextHead}, s.Body[:len(s.Body)-1]...)
+		s.Health -= 1
+	}
+	// Update the head
+	s.Head = nextHead
+}
+
+func (p *Point) getMovedPoint(direction Direction) Point {
+	dx, dy := 0, 0
+	switch direction {
+	case Up:
+		dx, dy = 0, 1
+	case Down:
+		dx, dy = 0, -1
+	case Left:
+		dx, dy = -1, 0
+	case Right:
+		dx, dy = 1, 0
+	}
+	return Point{
+		X: p.X + dx,
+		Y: p.Y + dy,
+	}
+}
+
+func (p *Point) Equal(other Point) bool {
+	return p.X == other.X && p.Y == other.Y
 }
 
 func NewBoard(width, height int) *Board {
 	return &Board{
-		Width:     width,
-		Height:    height,
-		Food:      mapset.NewSet[Point](),
-		Snakes:    []Sneak{},
-		FoodLayer: newLayer(width, height),
+		Width:  width,
+		Height: height,
+		Food:   mapset.NewSet[Point](),
+		Snakes: make([]Snake, 0),
 	}
 }
 
+func (b *Board) Copy() Board {
+	newBoard := *b                                     // Create a shallow copy of the board
+	newBoard.Food = b.Food.Clone().(mapset.Set[Point]) // Clone the food set
+	newBoard.Snakes = make([]Snake, len(b.Snakes))     // Create a new slice for snakes
+	for i, snake := range b.Snakes {
+		newSnake := snake                              // Create a shallow copy of the snake
+		newSnake.Body = make([]Point, len(snake.Body)) // Create a new slice for the body
+		copy(newSnake.Body, snake.Body)                // Copy the body points
+		newBoard.Snakes[i] = newSnake                  // Assign the copied snake to the new board
+	}
+	return newBoard
+}
+
 func (b *Board) placeSnake(head Point, length int, health int) {
-	snake := Sneak{
-		Body:      make([]Point, length),
-		Head:      head,
-		Length:    length,
-		Health:    health,
-		Alive:     true,
-		BodyLayer: newLayer(b.Width, b.Height),
-		HeadLayer: newLayer(b.Width, b.Height),
+	snake := Snake{
+		Id:     len(b.Snakes),
+		Body:   make([]Point, length),
+		Head:   head,
+		Length: length,
+		Health: health,
+		Alive:  true,
 	}
 	// Initialize the snake's body
 	for i := 0; i < length; i++ {
@@ -48,16 +146,30 @@ func (b *Board) placeSnake(head Point, length int, health int) {
 			Y: head.Y,
 		}
 	}
-	// Set the head layer value
-	snake.HeadLayer.setValue(head.X, head.Y, 1.0)
-	// Set the body layer values
-	snake.BodyLayer.setValue(head.X, head.Y, 1.0)
 	b.Snakes = append(b.Snakes, snake)
 }
 
 func (b *Board) placeFoods(coords ...Point) {
 	for _, coord := range coords {
 		b.Food.Add(coord)
-		b.FoodLayer.setValue(coord.X, coord.Y, 1.0)
 	}
+}
+
+func (b *Board) isFood(point Point) bool {
+	return b.Food.ContainsOne(point)
+}
+
+func (b *Board) getCollision(snake *Snake) (*Snake, bool, bool) {
+	for _, other := range b.Snakes {
+		if !other.Alive {
+			continue // Skip dead snakes
+		}
+		if snake.Id != other.Id && snake.Head.Equal(other.Head) {
+			return &other, false, true // Collision with another snake's head
+		}
+		if len(other.Body) > 1 && slices.Contains(other.Body[1:], snake.Head) {
+			return &other, other.Id == snake.Id, false // Collision with another snake's body
+		}
+	}
+	return nil, false, false // No collision
 }

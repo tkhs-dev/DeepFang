@@ -6,7 +6,7 @@ type BoardEditor struct {
 	Width  int
 	Height int
 	Food   mapset.Set[Point]
-	Snakes []Sneak
+	Snakes []Snake
 }
 
 func NewBoardEditor(width, height int) *BoardEditor {
@@ -14,20 +14,19 @@ func NewBoardEditor(width, height int) *BoardEditor {
 		Width:  width,
 		Height: height,
 		Food:   mapset.NewSet[Point](),
-		Snakes: []Sneak{},
+		Snakes: []Snake{},
 	}
 	return be
 }
 
 func (be *BoardEditor) placeSnake(bodies []Point, health int) *BoardEditor {
-	snake := Sneak{
-		Body:      bodies,
-		Head:      bodies[0],
-		Length:    len(bodies),
-		Health:    health,
-		Alive:     true,
-		BodyLayer: CoordsToLayer(bodies[1:], be.Width, be.Height),
-		HeadLayer: CoordsToLayer([]Point{bodies[0]}, be.Width, be.Height),
+	snake := Snake{
+		Id:     len(be.Snakes),
+		Body:   bodies,
+		Head:   bodies[0],
+		Length: len(bodies),
+		Health: health,
+		Alive:  true,
 	}
 	be.Snakes = append(be.Snakes, snake)
 	return be
@@ -55,10 +54,9 @@ func (be *BoardEditor) killSnakes(indexes ...int) *BoardEditor {
 
 func (be *BoardEditor) build() Board {
 	return Board{
-		Width:     be.Width,
-		Height:    be.Height,
-		Food:      be.Food,
-		Snakes:    be.Snakes,
-		FoodLayer: CoordsToLayer(be.Food.ToSlice(), be.Width, be.Height),
+		Width:  be.Width,
+		Height: be.Height,
+		Food:   be.Food,
+		Snakes: be.Snakes,
 	}
 }

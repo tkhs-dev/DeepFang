@@ -3,7 +3,7 @@ package env
 func CoordsToLayer(coords []Point, width int, height int) Layer {
 	layer := make(Layer, height)
 	for i := range layer {
-		layer[i] = make([]float32, width)
+		layer[i] = make([]int, width)
 	}
 
 	for _, coord := range coords {

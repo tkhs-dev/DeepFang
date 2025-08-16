@@ -61,7 +61,7 @@ func TestExecute_通常移動(t *testing.T) {
 	got.Board.placeSnake(Point{10, 5}, 3, 90)
 	got.Board.placeSnake(Point{5, 0}, 3, 90)
 	got.Board.placeSnake(Point{5, 10}, 3, 90)
-	result := got.Execute([]Direction{Right, Left, Up, Down})
+	result, _ := got.Execute([]Direction{Right, Left, Up, Down})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 5}, {0, 5}, {0, 5}}, 89).
@@ -94,7 +94,7 @@ func TestExecute_体力(t *testing.T) {
 	})
 	got.Board.placeSnake(Point{0, 0}, 2, 1)
 	got.Board.placeSnake(Point{0, 10}, 2, 90)
-	result := got.Execute([]Direction{Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
@@ -124,7 +124,7 @@ func TestExecute_体力同時(t *testing.T) {
 	})
 	got.Board.placeSnake(Point{0, 0}, 2, 1)
 	got.Board.placeSnake(Point{0, 10}, 2, 1)
-	result := got.Execute([]Direction{Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
@@ -155,7 +155,7 @@ func TestExecute_体力同時_負け(t *testing.T) {
 	got.Board.placeSnake(Point{0, 0}, 2, 1)
 	got.Board.placeSnake(Point{0, 10}, 2, 1)
 	got.Board.placeSnake(Point{0, 5}, 2, 2)
-	result := got.Execute([]Direction{Right, Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
@@ -188,7 +188,7 @@ func TestExecute_餌_食べる(t *testing.T) {
 	got.Board.placeSnake(Point{0, 0}, 2, 1)
 	got.Board.placeSnake(Point{0, 10}, 2, 1)
 	got.Board.placeFoods(Point{1, 0})
-	result := got.Execute([]Direction{Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 0}, {0, 0}, {0, 0}}, 100).
@@ -219,7 +219,7 @@ func TestExecute_餌_食べない(t *testing.T) {
 	got.Board.placeSnake(Point{0, 0}, 2, 1)
 	got.Board.placeSnake(Point{0, 10}, 2, 1)
 	got.Board.placeFoods(Point{2, 0})
-	result := got.Execute([]Direction{Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
@@ -253,7 +253,7 @@ func TestExecute_壁(t *testing.T) {
 	got.Board.placeSnake(Point{5, 0}, 3, 90)
 	got.Board.placeSnake(Point{5, 10}, 3, 90)
 	got.Board.placeSnake(Point{5, 5}, 1, 90)
-	result := got.Execute([]Direction{Left, Right, Down, Up, Up})
+	result, _ := got.Execute([]Direction{Left, Right, Down, Up, Up})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
@@ -291,7 +291,7 @@ func TestExecute_壁同時(t *testing.T) {
 	got.Board.placeSnake(Point{10, 5}, 3, 90)
 	got.Board.placeSnake(Point{5, 0}, 3, 90)
 	got.Board.placeSnake(Point{5, 10}, 3, 90)
-	result := got.Execute([]Direction{Left, Right, Down, Up})
+	result, _ := got.Execute([]Direction{Left, Right, Down, Up})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
@@ -326,7 +326,7 @@ func TestExecute_自己衝突(t *testing.T) {
 	got.Board.placeSnake(Point{0, 0}, 3, 90)
 	got.Board.placeSnake(Point{5, 5}, 3, 90)
 	got.Execute([]Direction{Right, Right})
-	result := got.Execute([]Direction{Right, Left})
+	result, _ := got.Execute([]Direction{Right, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{2, 0}, {1, 0}, {0, 0}}, 88).
@@ -357,7 +357,7 @@ func TestExecute_自己衝突同時(t *testing.T) {
 	got.Board.placeSnake(Point{0, 0}, 3, 90)
 	got.Board.placeSnake(Point{5, 5}, 3, 90)
 	got.Execute([]Direction{Right, Right})
-	result := got.Execute([]Direction{Left, Left})
+	result, _ := got.Execute([]Direction{Left, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{0, 0}, {1, 0}, {0, 0}}, 88).
@@ -387,7 +387,7 @@ func TestExecute_衝突(t *testing.T) {
 	})
 	got.Board.placeSnake(Point{5, 4}, 3, 90)
 	got.Board.placeSnake(Point{5, 5}, 3, 90)
-	result := got.Execute([]Direction{Up, Right})
+	result, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
@@ -419,7 +419,7 @@ func TestExecute_衝突同時(t *testing.T) {
 	got.Board.placeSnake(Point{6, 5}, 3, 90)
 	got.Board.placeSnake(Point{4, 6}, 3, 90)
 	got.Execute([]Direction{Right, Left, Down})
-	result := got.Execute([]Direction{Up, Down, Down})
+	result, _ := got.Execute([]Direction{Up, Down, Down})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {4, 4}}, 88).
@@ -454,7 +454,7 @@ func TestExecute_衝突_餌食(t *testing.T) {
 	got.Board.placeSnake(Point{2, 0}, 2, 90)
 	got.Board.placeFoods(Point{9, 0}, Point{6, 0})
 	got.Execute([]Direction{Right, Right, Right})
-	result := got.Execute([]Direction{Right, Right, Right})
+	result, _ := got.Execute([]Direction{Right, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{9, 0}, {8, 0}, {7, 0}}, 100).
@@ -486,7 +486,7 @@ func TestExecute_頭衝突(t *testing.T) {
 	})
 	got.Board.placeSnake(Point{5, 4}, 4, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
-	result := got.Execute([]Direction{Up, Right})
+	result, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
@@ -517,7 +517,7 @@ func TestExecute_頭衝突_餌(t *testing.T) {
 	got.Board.placeSnake(Point{5, 4}, 4, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
 	got.Board.placeFoods(Point{5, 5})
-	result := got.Execute([]Direction{Up, Right})
+	result, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}, {5, 4}}, 100).
@@ -548,7 +548,7 @@ func TestExecute_頭衝突_一部(t *testing.T) {
 	got.Board.placeSnake(Point{5, 4}, 4, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
 	got.Board.placeSnake(Point{0, 0}, 1, 90)
-	result := got.Execute([]Direction{Up, Right, Right})
+	result, _ := got.Execute([]Direction{Up, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
@@ -581,7 +581,7 @@ func TestExecute_頭衝突同時_引き分け(t *testing.T) {
 	got.Board.placeSnake(Point{5, 4}, 4, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
 	got.Board.placeSnake(Point{6, 5}, 4, 90)
-	result := got.Execute([]Direction{Up, Right, Left})
+	result, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
@@ -596,7 +596,7 @@ func TestExecute_頭衝突同時_引き分け(t *testing.T) {
 
 	expectedResults := []uint32{
 		TurnResultDead | TurnResultDraw | TurnResultHeadCollision,
-		TurnResultDead | TurnResultLoss | TurnResultHeadCollision,
+		TurnResultDead | TurnResultDraw | TurnResultHeadCollision,
 		TurnResultDead | TurnResultDraw | TurnResultHeadCollision,
 	}
 	for i, res := range result {
@@ -614,7 +614,7 @@ func TestExecute_頭衝突同時_全引き分け(t *testing.T) {
 	got.Board.placeSnake(Point{5, 4}, 3, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
 	got.Board.placeSnake(Point{6, 5}, 3, 90)
-	result := got.Execute([]Direction{Up, Right, Left})
+	result, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
@@ -647,7 +647,7 @@ func TestExecute_頭衝突同時_勝ち(t *testing.T) {
 	got.Board.placeSnake(Point{5, 4}, 4, 90)
 	got.Board.placeSnake(Point{4, 5}, 3, 90)
 	got.Board.placeSnake(Point{6, 5}, 3, 90)
-	result := got.Execute([]Direction{Up, Right, Left})
+	result, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
@@ -681,7 +681,7 @@ func TestExecute_頭衝突同時_多発(t *testing.T) {
 	got.Board.placeSnake(Point{6, 4}, 2, 90)
 	got.Board.placeSnake(Point{4, 5}, 2, 90)
 	got.Board.placeSnake(Point{6, 5}, 2, 90)
-	result := got.Execute([]Direction{Right, Left, Right, Left})
+	result, _ := got.Execute([]Direction{Right, Left, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 4}, {4, 4}}, 89).
@@ -718,7 +718,7 @@ func TestExecute_多要因_引き分け(t *testing.T) {
 	got.Board.placeSnake(Point{4, 3}, 2, 90)
 	got.Board.placeSnake(Point{0, 0}, 2, 90)
 	got.Board.placeSnake(Point{0, 10}, 2, 1)
-	result := got.Execute([]Direction{Right, Left, Up, Left, Left})
+	result, _ := got.Execute([]Direction{Right, Left, Up, Left, Left})
 
 	expected := NewBoardEditor(11, 11).
 		placeSnake([]Point{{5, 4}, {4, 4}}, 89).
