@@ -65,15 +65,15 @@ type Snake struct {
 
 func (s *Snake) move(nextHead Point, eaten bool) {
 	if !s.Alive {
-		println("Error: Cannot getMovedPoint a dead snake")
-		return // Snake is dead, cannot getMovedPoint
+		println("Error: Cannot GetMovedPoint a dead snake")
+		return // Snake is dead, cannot GetMovedPoint
 	}
 	if len(s.Body) == 0 {
-		println("Error: Snake has no body to getMovedPoint")
-		return // No body to getMovedPoint
+		println("Error: Snake has no body to GetMovedPoint")
+		return // No body to GetMovedPoint
 	}
 
-	// getMovedPoint the body
+	// GetMovedPoint the body
 	if eaten {
 		s.Body = append([]Point{nextHead}, s.Body...)
 		s.Health = 100
@@ -86,7 +86,7 @@ func (s *Snake) move(nextHead Point, eaten bool) {
 	s.Head = nextHead
 }
 
-func (p *Point) getMovedPoint(direction Direction) Point {
+func (p *Point) GetMovedPoint(direction Direction) Point {
 	dx, dy := 0, 0
 	switch direction {
 	case Up:
@@ -149,6 +149,23 @@ func (b *Board) placeSnake(head Point, length int, health int) {
 	b.Snakes = append(b.Snakes, snake)
 }
 
+func (b *Board) placeSnakeAt(body []Point, health int) {
+	if len(body) == 0 {
+		println("Error: Cannot place a snake with an empty body")
+		return // Cannot place a snake with an empty body
+	}
+	head := body[0]
+	snake := Snake{
+		Id:     len(b.Snakes),
+		Body:   body,
+		Head:   head,
+		Length: len(body),
+		Health: health,
+		Alive:  true,
+	}
+	b.Snakes = append(b.Snakes, snake)
+}
+
 func (b *Board) placeFoods(coords ...Point) {
 	for _, coord := range coords {
 		b.Food.Add(coord)
@@ -172,4 +189,31 @@ func (b *Board) getCollision(snake *Snake) (*Snake, bool, bool) {
 		}
 	}
 	return nil, false, false // No collision
+}
+
+func (b *Board) GetUnoccupiedPoints() mapset.Set[Point] {
+	points := mapset.NewSet[Point]()
+	for x := 0; x < b.Width; x++ {
+		for y := 0; y < b.Height; y++ {
+			point := Point{X: x, Y: y}
+			if !b.Food.ContainsOne(point) && !slices.ContainsFunc(b.Snakes, func(s Snake) bool {
+				return s.Head.Equal(point) || slices.Contains(s.Body, point)
+			}) {
+				points.Add(point)
+			}
+		}
+	}
+	return points
+}
+
+func (b *Board) IsPointOccupied(point Point, includeFood bool) bool {
+	if includeFood && b.Food.ContainsOne(point) {
+		return true // Point is occupied by food
+	}
+	for _, snake := range b.Snakes {
+		if snake.Head.Equal(point) || slices.Contains(snake.Body, point) {
+			return true // Point is occupied by a snake
+		}
+	}
+	return false // Point is unoccupied
 }
