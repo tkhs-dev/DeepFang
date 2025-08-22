@@ -1,4 +1,4 @@
-package env
+package rule
 
 import (
 	"slices"
@@ -216,4 +216,35 @@ func (b *Board) IsPointOccupied(point Point, includeFood bool) bool {
 		}
 	}
 	return false // Point is unoccupied
+}
+
+func ShowBoard(board *Board) {
+	for y := board.Height - 1; y >= 0; y-- {
+		for x := 0; x < board.Width; x++ {
+			point := Point{X: x, Y: y}
+			if board.Food.Contains(point) {
+				print("F ")
+			} else {
+				found := false
+				for _, snake := range board.Snakes {
+					if snake.Head.Equal(point) {
+						print("H ")
+						found = true
+						break
+					}
+					for _, bodyPart := range snake.Body {
+						if bodyPart.Equal(point) {
+							print("B ")
+							found = true
+							break
+						}
+					}
+				}
+				if !found {
+					print(". ")
+				}
+			}
+		}
+		println()
+	}
 }

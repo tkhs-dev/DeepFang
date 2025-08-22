@@ -1,4 +1,4 @@
-package env
+package rule
 
 import mapset "github.com/deckarep/golang-set/v2"
 
@@ -19,7 +19,7 @@ func NewBoardEditor(width, height int) *BoardEditor {
 	return be
 }
 
-func (be *BoardEditor) placeSnake(bodies []Point, health int) *BoardEditor {
+func (be *BoardEditor) PlaceSnake(bodies []Point, health int) *BoardEditor {
 	snake := Snake{
 		Id:     len(be.Snakes),
 		Body:   bodies,
@@ -32,7 +32,7 @@ func (be *BoardEditor) placeSnake(bodies []Point, health int) *BoardEditor {
 	return be
 }
 
-func (be *BoardEditor) placeFoods(coords ...Point) *BoardEditor {
+func (be *BoardEditor) PlaceFoods(coords ...Point) *BoardEditor {
 	for _, coord := range coords {
 		if coord.X < 0 || coord.X >= be.Width || coord.Y < 0 || coord.Y >= be.Height {
 			continue // Skip out-of-bounds coordinates
@@ -42,7 +42,7 @@ func (be *BoardEditor) placeFoods(coords ...Point) *BoardEditor {
 	return be
 }
 
-func (be *BoardEditor) killSnakes(indexes ...int) *BoardEditor {
+func (be *BoardEditor) KillSnakes(indexes ...int) *BoardEditor {
 	for _, index := range indexes {
 		if index < 0 || index >= len(be.Snakes) {
 			continue // Skip out-of-bounds indexes
@@ -52,7 +52,7 @@ func (be *BoardEditor) killSnakes(indexes ...int) *BoardEditor {
 	return be
 }
 
-func (be *BoardEditor) build() Board {
+func (be *BoardEditor) Build() Board {
 	return Board{
 		Width:  be.Width,
 		Height: be.Height,

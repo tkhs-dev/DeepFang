@@ -1,0 +1,38 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  setup:
+    desc: Setup the environment
+    cmds:
+      - task: setup-proto
+  setup-proto:
+    desc: Setup the proto files
+    dir: env
+    cmds:
+      - cmd: winget install protobuf
+        platforms:
+          - windows
+      - cmd: apt-get install protobuf-compiler
+        platforms:
+          - linux
+      - cmd: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - cmd: go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+  proto-gen:
+    desc: Generate protobuf files
+    dir: env
+    silent: true
+    cmds:
+      - cmd: mkdir -p ./server/grpc
+        platforms:
+          - linux
+      - cmd: cmd /c "if not exist server\grpc mkdir server\grpc"
+        platforms:
+          - windows
+      - cmd: protoc --go_out=. --go-grpc_out=. -I ../proto ../proto/*.proto
+  trainer:
+    desc: Run the trainer
+    silent: true
+    cmds:
+      - uv run --package trainer trainer

@@ -1,4 +1,4 @@
-package env
+package rule
 
 import (
 	"fmt"
@@ -69,17 +69,16 @@ func NewGame(setting Setting) *Game {
 	}
 }
 
-func (g *Game) Setup(snakeSettings []SnakeSetting) {
+func (g *Game) Setup(snakeSettings []SnakeSetting) error {
 	err := PlaceSnakesAutomatically(&g.Board, g.Rand, snakeSettings)
 	if err != nil {
-		return
+		return fmt.Errorf("failed to place snakes: %w", err)
 	}
 	err = PlaceFoodAutomatically(g.Rand, &g.Board)
 	if err != nil {
-		println("Error placing food:", err.Error())
-		return
+		return fmt.Errorf("failed to place food: %w", err)
 	}
-	println("Game setup complete with", len(g.Board.Snakes), "snakes and", g.Board.Food.Cardinality(), "food items.")
+	return nil
 }
 
 func (g *Game) Execute(moves []Direction) ([]uint32, bool, error) {

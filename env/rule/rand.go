@@ -1,4 +1,4 @@
-package env
+package rule
 
 import "math/rand"
 

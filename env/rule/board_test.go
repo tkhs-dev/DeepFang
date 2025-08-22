@@ -1,4 +1,4 @@
-package env
+package rule
 
 import (
 	"testing"
@@ -15,9 +15,9 @@ func TestPlaceSnake(t *testing.T) {
 	got.Board.placeSnake(Point{3, 3}, 2, 0)
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{2, 2}, {2, 2}, {2, 2}}, 90).
-		placeSnake([]Point{{3, 3}, {3, 3}}, 0).
-		build()
+		PlaceSnake([]Point{{2, 2}, {2, 2}, {2, 2}}, 90).
+		PlaceSnake([]Point{{3, 3}, {3, 3}}, 0).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("placeSnake() mismatch (-got +expected):\n%s", d)
@@ -33,11 +33,11 @@ func TestPlaceFood(t *testing.T) {
 	got.Board.placeSnake(Point{2, 2}, 2, 90)
 
 	expected := NewBoardEditor(11, 11).
-		placeFoods(Point{2, 2}).
-		placeSnake([]Point{{2, 2}, {2, 2}}, 90).
-		build()
+		PlaceFoods(Point{2, 2}).
+		PlaceSnake([]Point{{2, 2}, {2, 2}}, 90).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
-		t.Errorf("placeFoods() mismatch (-got +expected):\n%s", d)
+		t.Errorf("PlaceFoods() mismatch (-got +expected):\n%s", d)
 	}
 }

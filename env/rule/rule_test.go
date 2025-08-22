@@ -1,4 +1,4 @@
-package env
+package rule
 
 import (
 	"testing"
@@ -64,11 +64,11 @@ func TestExecute_通常移動(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Left, Up, Down})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 5}, {0, 5}, {0, 5}}, 89).
-		placeSnake([]Point{{9, 5}, {10, 5}, {10, 5}}, 89).
-		placeSnake([]Point{{5, 1}, {5, 0}, {5, 0}}, 89).
-		placeSnake([]Point{{5, 9}, {5, 10}, {5, 10}}, 89).
-		build()
+		PlaceSnake([]Point{{1, 5}, {0, 5}, {0, 5}}, 89).
+		PlaceSnake([]Point{{9, 5}, {10, 5}, {10, 5}}, 89).
+		PlaceSnake([]Point{{5, 1}, {5, 0}, {5, 0}}, 89).
+		PlaceSnake([]Point{{5, 9}, {5, 10}, {5, 10}}, 89).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -102,10 +102,10 @@ func TestExecute_体力(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
-		placeSnake([]Point{{1, 10}, {0, 10}}, 89).
-		killSnakes(0).
-		build()
+		PlaceSnake([]Point{{1, 0}, {0, 0}}, 0).
+		PlaceSnake([]Point{{1, 10}, {0, 10}}, 89).
+		KillSnakes(0).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -137,10 +137,10 @@ func TestExecute_体力同時(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
-		placeSnake([]Point{{1, 10}, {0, 10}}, 0).
-		killSnakes(0, 1).
-		build()
+		PlaceSnake([]Point{{1, 0}, {0, 0}}, 0).
+		PlaceSnake([]Point{{1, 10}, {0, 10}}, 0).
+		KillSnakes(0, 1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -173,11 +173,11 @@ func TestExecute_体力同時_負け(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
-		placeSnake([]Point{{1, 10}, {0, 10}}, 0).
-		placeSnake([]Point{{1, 5}, {0, 5}}, 1).
-		killSnakes(0, 1).
-		build()
+		PlaceSnake([]Point{{1, 0}, {0, 0}}, 0).
+		PlaceSnake([]Point{{1, 10}, {0, 10}}, 0).
+		PlaceSnake([]Point{{1, 5}, {0, 5}}, 1).
+		KillSnakes(0, 1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -211,10 +211,10 @@ func TestExecute_餌_食べる(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 0}, {0, 0}, {0, 0}}, 100).
-		placeSnake([]Point{{1, 10}, {0, 10}}, 0).
-		killSnakes(1).
-		build()
+		PlaceSnake([]Point{{1, 0}, {0, 0}, {0, 0}}, 100).
+		PlaceSnake([]Point{{1, 10}, {0, 10}}, 0).
+		KillSnakes(1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -247,11 +247,11 @@ func TestExecute_餌_食べない(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{1, 0}, {0, 0}}, 0).
-		placeSnake([]Point{{1, 10}, {0, 10}}, 0).
-		placeFoods(Point{2, 0}).
-		killSnakes(0, 1).
-		build()
+		PlaceSnake([]Point{{1, 0}, {0, 0}}, 0).
+		PlaceSnake([]Point{{1, 10}, {0, 10}}, 0).
+		PlaceFoods(Point{2, 0}).
+		KillSnakes(0, 1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -286,13 +286,13 @@ func TestExecute_壁(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Left, Right, Down, Up, Up})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
-		placeSnake([]Point{{11, 5}, {10, 5}, {10, 5}}, 89).
-		placeSnake([]Point{{5, -1}, {5, 0}, {5, 0}}, 89).
-		placeSnake([]Point{{5, 11}, {5, 10}, {5, 10}}, 89).
-		placeSnake([]Point{{5, 6}}, 89).
-		killSnakes(0, 1, 2, 3).
-		build()
+		PlaceSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
+		PlaceSnake([]Point{{11, 5}, {10, 5}, {10, 5}}, 89).
+		PlaceSnake([]Point{{5, -1}, {5, 0}, {5, 0}}, 89).
+		PlaceSnake([]Point{{5, 11}, {5, 10}, {5, 10}}, 89).
+		PlaceSnake([]Point{{5, 6}}, 89).
+		KillSnakes(0, 1, 2, 3).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -329,12 +329,12 @@ func TestExecute_壁同時(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Left, Right, Down, Up})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
-		placeSnake([]Point{{11, 5}, {10, 5}, {10, 5}}, 89).
-		placeSnake([]Point{{5, -1}, {5, 0}, {5, 0}}, 89).
-		placeSnake([]Point{{5, 11}, {5, 10}, {5, 10}}, 89).
-		killSnakes(0, 1, 2, 3).
-		build()
+		PlaceSnake([]Point{{-1, 5}, {0, 5}, {0, 5}}, 89).
+		PlaceSnake([]Point{{11, 5}, {10, 5}, {10, 5}}, 89).
+		PlaceSnake([]Point{{5, -1}, {5, 0}, {5, 0}}, 89).
+		PlaceSnake([]Point{{5, 11}, {5, 10}, {5, 10}}, 89).
+		KillSnakes(0, 1, 2, 3).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -369,10 +369,10 @@ func TestExecute_自己衝突(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{2, 0}, {1, 0}, {0, 0}}, 88).
-		placeSnake([]Point{{5, 5}, {6, 5}, {5, 5}}, 88).
-		killSnakes(1).
-		build()
+		PlaceSnake([]Point{{2, 0}, {1, 0}, {0, 0}}, 88).
+		PlaceSnake([]Point{{5, 5}, {6, 5}, {5, 5}}, 88).
+		KillSnakes(1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -405,10 +405,10 @@ func TestExecute_自己衝突同時(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Left, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{0, 0}, {1, 0}, {0, 0}}, 88).
-		placeSnake([]Point{{5, 5}, {6, 5}, {5, 5}}, 88).
-		killSnakes(0, 1).
-		build()
+		PlaceSnake([]Point{{0, 0}, {1, 0}, {0, 0}}, 88).
+		PlaceSnake([]Point{{5, 5}, {6, 5}, {5, 5}}, 88).
+		KillSnakes(0, 1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -440,10 +440,10 @@ func TestExecute_衝突(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{6, 5}, {5, 5}, {5, 5}}, 89).
-		killSnakes(0).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{6, 5}, {5, 5}, {5, 5}}, 89).
+		KillSnakes(0).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -477,11 +477,11 @@ func TestExecute_衝突同時(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Down, Down})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {4, 4}}, 88).
-		placeSnake([]Point{{5, 4}, {5, 5}, {6, 5}}, 88).
-		placeSnake([]Point{{4, 4}, {4, 5}, {4, 6}}, 88).
-		killSnakes(0, 1, 2).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {4, 4}}, 88).
+		PlaceSnake([]Point{{5, 4}, {5, 5}, {6, 5}}, 88).
+		PlaceSnake([]Point{{4, 4}, {4, 5}, {4, 6}}, 88).
+		KillSnakes(0, 1, 2).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -517,11 +517,11 @@ func TestExecute_衝突_餌食(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{9, 0}, {8, 0}, {7, 0}}, 100).
-		placeSnake([]Point{{6, 0}, {5, 0}, {4, 0}}, 100).
-		placeSnake([]Point{{4, 0}, {3, 0}}, 88).
-		killSnakes(2).
-		build()
+		PlaceSnake([]Point{{9, 0}, {8, 0}, {7, 0}}, 100).
+		PlaceSnake([]Point{{6, 0}, {5, 0}, {4, 0}}, 100).
+		PlaceSnake([]Point{{4, 0}, {3, 0}}, 88).
+		KillSnakes(2).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -554,10 +554,10 @@ func TestExecute_頭衝突(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
-		killSnakes(1).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
+		KillSnakes(1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -590,10 +590,10 @@ func TestExecute_頭衝突_餌(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}, {5, 4}}, 100).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}, {4, 5}}, 100).
-		killSnakes(1).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}, {5, 4}}, 100).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}, {4, 5}}, 100).
+		KillSnakes(1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -626,11 +626,11 @@ func TestExecute_頭衝突_一部(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right, Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
-		placeSnake([]Point{{1, 0}}, 89).
-		killSnakes(1).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
+		PlaceSnake([]Point{{1, 0}}, 89).
+		KillSnakes(1).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -664,11 +664,11 @@ func TestExecute_頭衝突同時_引き分け(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
-		placeSnake([]Point{{5, 5}, {6, 5}, {6, 5}, {6, 5}}, 89).
-		killSnakes(0, 1, 2).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
+		PlaceSnake([]Point{{5, 5}, {6, 5}, {6, 5}, {6, 5}}, 89).
+		KillSnakes(0, 1, 2).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -702,11 +702,11 @@ func TestExecute_頭衝突同時_全引き分け(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
-		placeSnake([]Point{{5, 5}, {6, 5}, {6, 5}}, 89).
-		killSnakes(0, 1, 2).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
+		PlaceSnake([]Point{{5, 5}, {6, 5}, {6, 5}}, 89).
+		KillSnakes(0, 1, 2).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -740,11 +740,11 @@ func TestExecute_頭衝突同時_勝ち(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Up, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
-		placeSnake([]Point{{5, 5}, {6, 5}, {6, 5}}, 89).
-		killSnakes(1, 2).
-		build()
+		PlaceSnake([]Point{{5, 5}, {5, 4}, {5, 4}, {5, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}, {4, 5}}, 89).
+		PlaceSnake([]Point{{5, 5}, {6, 5}, {6, 5}}, 89).
+		KillSnakes(1, 2).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -779,12 +779,12 @@ func TestExecute_頭衝突同時_多発(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Left, Right, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 4}, {4, 4}}, 89).
-		placeSnake([]Point{{5, 4}, {6, 4}}, 89).
-		placeSnake([]Point{{5, 5}, {4, 5}}, 89).
-		placeSnake([]Point{{5, 5}, {6, 5}}, 89).
-		killSnakes(0, 1, 2, 3).
-		build()
+		PlaceSnake([]Point{{5, 4}, {4, 4}}, 89).
+		PlaceSnake([]Point{{5, 4}, {6, 4}}, 89).
+		PlaceSnake([]Point{{5, 5}, {4, 5}}, 89).
+		PlaceSnake([]Point{{5, 5}, {6, 5}}, 89).
+		KillSnakes(0, 1, 2, 3).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -821,13 +821,13 @@ func TestExecute_多要因_引き分け(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right, Left, Up, Left, Left})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 4}, {4, 4}}, 89).
-		placeSnake([]Point{{5, 4}, {6, 4}}, 89).
-		placeSnake([]Point{{4, 4}, {4, 3}}, 89).
-		placeSnake([]Point{{-1, 0}, {0, 0}}, 89).
-		placeSnake([]Point{{-1, 10}, {0, 10}}, 0).
-		killSnakes(0, 1, 2, 3, 4).
-		build()
+		PlaceSnake([]Point{{5, 4}, {4, 4}}, 89).
+		PlaceSnake([]Point{{5, 4}, {6, 4}}, 89).
+		PlaceSnake([]Point{{4, 4}, {4, 3}}, 89).
+		PlaceSnake([]Point{{-1, 0}, {0, 0}}, 89).
+		PlaceSnake([]Point{{-1, 10}, {0, 10}}, 0).
+		KillSnakes(0, 1, 2, 3, 4).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -861,8 +861,8 @@ func TestExecute_ソロ(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{5, 4}, {4, 4}}, 89).
-		build()
+		PlaceSnake([]Point{{5, 4}, {4, 4}}, 89).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
@@ -892,9 +892,9 @@ func TestExecute_ソロ_負け(t *testing.T) {
 	result, ended, _ := got.Execute([]Direction{Right})
 
 	expected := NewBoardEditor(11, 11).
-		placeSnake([]Point{{11, 4}, {10, 4}}, 89).
-		killSnakes(0).
-		build()
+		PlaceSnake([]Point{{11, 4}, {10, 4}}, 89).
+		KillSnakes(0).
+		Build()
 
 	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
 		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)

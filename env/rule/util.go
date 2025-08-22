@@ -1,4 +1,4 @@
-package env
+package rule
 
 func CoordsToLayer(coords []Point, width int, height int) Layer {
 	layer := make(Layer, height)
