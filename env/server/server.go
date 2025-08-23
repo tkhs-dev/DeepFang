@@ -55,6 +55,9 @@ func (s Server) CollectExperience(request *grpc_gen.CollectExperienceRequest, g 
 		},
 	}
 
+	if len(request.Models) == 0 {
+		return status.Error(codes.InvalidArgument, "At least one model must be provided")
+	}
 	models := make(map[string]neuralnet.Model)
 	for i, model := range request.Models {
 		onnx, err := neuralnet.NewOnnxModel(model, len(args.Snakes), int(args.BoardWidth), int(args.BoardHeight))
@@ -63,6 +66,12 @@ func (s Server) CollectExperience(request *grpc_gen.CollectExperienceRequest, g 
 			return status.Error(codes.Internal, "failed to create ONNX model")
 		}
 		models["model:"+strconv.Itoa(i)] = onnx
+	}
+
+	for _, snakeName := range args.Snakes {
+		if _, exists := models[snakeName]; !exists {
+			return status.Error(codes.InvalidArgument, "At least one snake must be powered by a model")
+		}
 	}
 
 	err := collector.CollectExperiencesStreaming(g.Context(), epArg, models, args.Snakes, int(request.StepNum), int(request.WorkerNum), 10*time.Millisecond)

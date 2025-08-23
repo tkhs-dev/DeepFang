@@ -50,10 +50,8 @@ func (s SimpleSafeClient) OnMoveCallback(ctx *GameContext, board *rule.Board, sn
 	}
 	action, set := safeActions.Pop()
 	if !set {
-		println("No valid actions available, returning Right by default")
 		return rule.Up // Default action if no valid actions are available
 	}
-	println("Selected action:", action.String())
 	return action
 }
 
