@@ -5,13 +5,19 @@ import (
 	env "golib/rule"
 )
 
+type State struct {
+	Board   *env.Board
+	Feature []float32
+}
+
 type Experience struct {
-	Board  *env.Board
-	Actor  []float32
-	Critic float32
-	Action int
-	Reward float32
-	Done   bool
+	State   *State
+	LogProb float32
+	Critic  float32
+	Reward  float32
+	Action  int32
+	Done    bool
+	Uid     string
 }
 
 type EpisodeData struct {

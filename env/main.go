@@ -47,3 +47,35 @@ func main() {
 	log.Println("stopping gRPC server...")
 	s.GracefulStop()
 }
+
+//func main() {
+//	if runtime.GOOS == "windows" {
+//		ort.SetSharedLibraryPath("thirdparty/onnxruntime.dll")
+//	} else {
+//		ort.SetSharedLibraryPath("thirdparty/libonnxruntime.so")
+//	}
+//	err := ort.InitializeEnvironment()
+//	if err != nil {
+//		println("Failed to initialize ONNX Runtime environment:", err.Error())
+//		return
+//	}
+//	bytes, err := ioutil.ReadFile("../output.onnx")
+//	if err != nil {
+//		panic(err)
+//	}
+//	model, err := neuralnet.NewOnnxModel(bytes, 1, 6, 6)
+//	if err != nil {
+//		println("Failed to load model:", err.Error())
+//		return
+//	}
+//	defer model.Close()
+//	data := neuralnet.GetInputTensor(rule.NewBoardEditor(6, 6).PlaceFoods(rule.Point{5, 5}).PlaceSnake([]rule.Point{{1, 1}, {1, 2}, {1, 3}}, 100).Build())
+//	predict, f, err := model.Predict(data)
+//	if err != nil {
+//		println("Model prediction failed:", err.Error())
+//		return
+//	}
+//	fmt.Println(data.CNNInput)
+//	fmt.Println(data.FeatureInput)
+//	fmt.Println(predict, f)
+//}

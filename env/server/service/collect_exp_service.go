@@ -172,6 +172,9 @@ func (sec *StreamingExperienceCollector) CollectExperiencesStreaming(
 	// Error channel for worker errors
 	errCh := make(chan error, numWorkers)
 
+	// Timer
+	startTime := time.Now()
+
 	// Worker goroutines
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
@@ -244,11 +247,11 @@ func (sec *StreamingExperienceCollector) CollectExperiencesStreaming(
 					"chunks_sent":         totalChunks,
 					"buffer_size":         bufferSize,
 					"progress_percent":    float64(count) / float64(targetExperiences) * 100,
-				}).Info("Collection progress")
+				}).Debug("Collection progress")
 
 				// 目安に達したらワーカーを停止（ゲームは中断しない）
 				if count >= int64(targetExperiences) {
-					sec.logger.Info("Target experience count reached, stopping collection")
+					sec.logger.Debug("Target experience count reached, stopping collection")
 					cancelWorkers()
 					return
 				}
@@ -277,6 +280,7 @@ func (sec *StreamingExperienceCollector) CollectExperiencesStreaming(
 		sec.logger.WithFields(logrus.Fields{
 			"total_experiences": totalExp,
 			"total_chunks_sent": totalChunks,
+			"total_time_msec":   time.Since(startTime).Milliseconds(),
 		}).Info("Experience collection completed")
 
 		return nil

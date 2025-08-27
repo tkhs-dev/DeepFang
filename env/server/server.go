@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,13 +24,27 @@ func (s streamSenderImpl) Send(chunk *service.ExperienceChunk) error {
 
 type Server struct {
 	grpc_gen.UnimplementedEnvServiceServer
+	logger *logrus.Logger
 }
 
 func NewServer() *Server {
-	return &Server{}
+	return &Server{
+		logger: logrus.New(),
+	}
 }
 
 func (s Server) CollectExperience(request *grpc_gen.CollectExperienceRequest, g grpc.ServerStreamingServer[grpc_gen.CollectExperienceResponse]) error {
+	s.logger.WithFields(logrus.Fields{
+		"board_width":       request.GetArgs().GetBoardWidth(),
+		"board_height":      request.GetArgs().GetBoardHeight(),
+		"food_spawn_chance": request.GetArgs().GetFoodSpawnChance(),
+		"minimum_food":      request.GetArgs().GetMinimumFood(),
+		"snakes":            request.GetArgs().GetSnakes(),
+		"models":            len(request.GetModels()),
+		"step_num":          request.GetStepNum(),
+		"worker_num":        request.GetWorkerNum(),
+		"chunk_size":        request.GetChunkSize(),
+	}).Info("CollectExperience called")
 	collector := service.NewStreamingExperienceCollector(
 		int(request.ChunkSize),
 		streamSenderImpl(func(chunk *service.ExperienceChunk) error {
@@ -40,7 +55,7 @@ func (s Server) CollectExperience(request *grpc_gen.CollectExperienceRequest, g 
 				return fmt.Errorf("failed to send chunk: %v", err)
 			}
 			return nil
-		}), nil)
+		}), s.logger)
 
 	args := request.GetArgs()
 

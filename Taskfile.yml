@@ -24,6 +24,13 @@ tasks:
     dir: env
     silent: true
     cmds:
+      - task: proto-gen-go
+      - task: proto-gen-python
+  proto-gen-go:
+    desc: Generate protobuf files
+    dir: env
+    silent: true
+    cmds:
       - cmd: mkdir -p ./server/grpc
         platforms:
           - linux
@@ -31,6 +38,24 @@ tasks:
         platforms:
           - windows
       - cmd: protoc --go_out=. --go-grpc_out=. -I ../proto ../proto/*.proto
+  proto-gen-python:
+    desc: Generate Python protobuf files
+    dir: trainer/src
+    silent: true
+    cmds:
+      - cmd: cp ../../proto/env.proto ./trainer/client/grpc/env.proto
+        platforms:
+          - linux
+      - cmd: cmd /c "copy ..\..\proto\env.proto .\trainer\client\grpc\env.proto"
+        platforms:
+          - windows
+      - cmd:  python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./trainer/client/grpc/env.proto
+      - cmd: rm ./trainer/client/grpc/env.proto
+        platforms:
+          - linux
+      - cmd: cmd /c "del .\trainer\client\grpc\env.proto"
+        platforms:
+            - windows
   trainer:
     desc: Run the trainer
     silent: true

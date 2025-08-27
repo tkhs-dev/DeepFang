@@ -22,7 +22,7 @@ type OnnxModel struct {
 	session            *ort.AdvancedSession
 	cnnInputTensor     *ort.Tensor[float32] // CNN input tensor
 	featureInputTensor *ort.Tensor[float32] // General input tensor
-	actorOutputTensor  *ort.Tensor[float32] // Actor output tensor
+	actorOutputTensor  *ort.Tensor[float32] // LogProb output tensor
 	criticOutputTensor *ort.Tensor[float32] // Critic output tensor
 	width              int
 	height             int

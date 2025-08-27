@@ -8,12 +8,12 @@ import (
 
 func ToGrpcExperience(e env.Experience) *grpc_gen.Experience {
 	return &grpc_gen.Experience{
-		BoardState: ToGrpcBoardState(e.Board),
-		Actor:      e.Actor,
-		Critic:     e.Critic,
-		Action:     int32(e.Action),
-		Reward:     e.Reward,
-		Done:       e.Done,
+		State:   ToGrpcState(e.State),
+		LogProb: e.LogProb,
+		Critic:  e.Critic,
+		Action:  e.Action,
+		Reward:  e.Reward,
+		Done:    e.Done,
 	}
 }
 
@@ -23,6 +23,13 @@ func ToGrpcExperiences(experiences []env.Experience) []*grpc_gen.Experience {
 		grpcExperiences[i] = ToGrpcExperience(e)
 	}
 	return grpcExperiences
+}
+
+func ToGrpcState(s *env.State) *grpc_gen.State {
+	return &grpc_gen.State{
+		BoardState:   ToGrpcBoardState(s.Board),
+		FeatureState: &grpc_gen.FeatureState{Features: s.Feature},
+	}
 }
 
 func ToGrpcBoardState(b *rule.Board) *grpc_gen.BoardState {
@@ -41,6 +48,11 @@ func ToGrpcSnakes(snakes []rule.Snake) []*grpc_gen.Snake {
 }
 
 func ToGrpcSnake(s *rule.Snake) *grpc_gen.Snake {
+	if !s.Alive {
+		return &grpc_gen.Snake{
+			Body: []*grpc_gen.Point{},
+		}
+	}
 	return &grpc_gen.Snake{
 		Body: ToGrpcPoints(s.Body),
 	}
