@@ -153,12 +153,39 @@ func logProb(logits []float32, action int) float32 {
 func calculateReward(board *rule.Board, snake *rule.Snake, result uint32) float32 {
 	reward := 0.0
 	if (result & rule.TurnResultMaskAlive) == rule.TurnResultAlive {
-		reward += 0.1 // Small positive reward for surviving the turn
+		reward += 0.5 // Small positive reward for surviving the turn
 	} else {
-		reward += -1.0 // Negative reward for dying
+		if snake.Length > 2 && snake.Head.Equal(snake.Body[2]) {
+			// 自殺ペナルティ
+			reward += -3.0
+		} else {
+			const (
+				C     = 3.0 // 最大のペナルティ
+				alpha = 0.5 // 軽減係数 (0=軽減なし, 1=最大軽減)
+			)
+
+			boardSize := float64(board.Width * board.Height)
+			p := float64(snake.Length) / boardSize
+
+			reward += -C * (1.0 - alpha*p)
+		}
 	}
 	if (result & rule.TurnResultMaskFood) == rule.TurnResultFoodEaten {
-		reward += 1.0 // Positive reward for eating food
+		const (
+			maxHealth = 100
+			threshold = 50
+			a         = 0.5 // 体力ゼロ時の最大正報酬
+			b         = 0.1 // 体力満タン時の最大負報酬（小さい値にする）
+		)
+
+		h := float64(snake.Health)
+
+		if h < threshold {
+			// 体力が少ないとき → 正報酬 (0 ~ +a)
+			reward += a * (1.0 - h/threshold)
+		}
+		// 体力が多いとき → 負報酬 (0 ~ -b)
+		reward += -b * (h - threshold) / (maxHealth - threshold)
 	}
 	return float32(reward)
 }

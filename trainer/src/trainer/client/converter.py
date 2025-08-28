@@ -16,22 +16,28 @@ def from_grpc_state(state: State, width: int, height: int, num_snakes: int) -> T
 def from_grpc_board(board: BoardState, width: int, height: int, num_snakes: int) -> torch.Tensor:
     """gRPCのBoardをPyTorchのTensorに変換する"""
     # empty board
-    state = torch.zeros((num_snakes * 3 + 1, height, width), dtype=torch.float32)
+    state = torch.zeros((num_snakes * 3 + 2, height + 2, width + 2), dtype=torch.float32)
     # snakes
     for i, snake in enumerate(board.snakes):
         if not snake.body:
             continue
         # head
-        state[i * 3, snake.body[0].y, snake.body[0].x] = 1.0
+        state[i * 3, snake.body[0].y + 1, snake.body[0].x + 1] = 1.0
         # body
         for segment in snake.body:
-            state[i * 3 + 1, segment.y, segment.x] = 1.0
+            state[i * 3 + 1, segment.y + 1, segment.x + 1] = 1.0
         # tail
         tail = snake.body[-1]
-        state[i * 3 + 2, tail.y, tail.x] = 1.0
+        state[i * 3 + 2, tail.y + 1, tail.x + 1] = 1.0
     # food
     for food in board.food:
-        state[num_snakes * 3, food.y, food.x] = 1.0
+        state[num_snakes * 3, food.y + 1, food.x + 1] = 1.0
+    # walls (borders)
+    state[-1, 0, :] = 1.0
+    state[-1, -1, :] = 1.0
+    state[-1, :, 0] = 1.0
+    state[-1, :, -1] = 1.0
+
     return state
 
 def print_board(state: torch.Tensor):

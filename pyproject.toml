@@ -8,8 +8,10 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "flask>=3.1.2",
     "numpy>=2.3.2",
     "onnx>=1.18.0",
+    "stable-baselines3>=2.7.0",
     "torch>=2.8.0",
 ]
 

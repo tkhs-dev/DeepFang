@@ -7,6 +7,8 @@ tasks:
     desc: Setup the environment
     cmds:
       - task: setup-proto
+      - task: proto-gen
+      - cmd: go install github.com/BattlesnakeOfficial/rules/cli/battlesnake@latest
   setup-proto:
     desc: Setup the proto files
     dir: env
@@ -61,3 +63,14 @@ tasks:
     silent: true
     cmds:
       - uv run --package trainer trainer
+
+  runner-solo:
+    desc: Run the trainer
+    silent: true
+    cmds:
+      - uv run --package runner runner -w 11 -ht 11 -s 1 {{.CLI_ARGS}}
+
+  play:
+    desc: Play a game against your bot
+    cmds:
+      - battlesnake play -W 11 -H 11 --foodSpawnChance 25 --minimumFood 3 --url http://localhost:8000 --browser solo {{.CLI_ARGS}}

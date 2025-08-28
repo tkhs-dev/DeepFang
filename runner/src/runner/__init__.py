@@ -1,2 +1,3 @@
 def main() -> None:
-    print("Hello from runner!")
+    from .cli import cli
+    cli()

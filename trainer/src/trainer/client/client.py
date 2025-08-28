@@ -29,9 +29,18 @@ class Experience:
     log_probs: torch.Tensor
     values: torch.Tensor
 
+MAX_MESSAGE_LENGTH = 8 * 1024 * 1024  # 100MB
+
 class EnvClient:
     def __init__(self, host='localhost', port=8080):
-        self.channel = grpc.insecure_channel(f'{host}:{port}')
+        self.channel = grpc.insecure_channel(
+            f'{host}:{port}',
+            options=[
+                ('grpc.max_message_length', MAX_MESSAGE_LENGTH),
+                ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+                ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+            ],
+        )
         self.stub = EnvServiceStub(self.channel)
 
     def close(self):

@@ -10,21 +10,22 @@ func GetInputTensor(board rule.Board) *InputData {
 }
 
 func boardToCNNInput(board rule.Board) []float32 {
-	zeroChannel := make([]float32, board.Width*board.Height*3)
-	size := board.Width * board.Height
-	result := make([]float32, (len(board.Snakes)*3+1)*size)
+	width, height := board.Width+2, board.Height+2
+	size := width * height
+	zeroChannel := make([]float32, size*3)
+	result := make([]float32, (len(board.Snakes)*3+2)*size)
 	for i, snake := range board.Snakes {
 		if snake.Alive {
 			// Head
-			headIndex := snake.Head.Y*board.Width + snake.Head.X
+			headIndex := (snake.Head.Y+1)*width + (snake.Head.X + 1)
 			result[3*i*size+headIndex] = 1.0
 			// Body
 			for _, bodyPart := range snake.Body {
-				bodyIndex := bodyPart.Y*board.Width + bodyPart.X
+				bodyIndex := (bodyPart.Y+1)*width + (bodyPart.X + 1)
 				result[(3*i+1)*size+bodyIndex] = 1.0
 			}
 			// Tail
-			tailIndex := snake.Body[len(snake.Body)-1].Y*board.Width + snake.Body[len(snake.Body)-1].X
+			tailIndex := (snake.Body[len(snake.Body)-1].Y+1)*width + (snake.Body[len(snake.Body)-1].X + 1)
 			result[(3*i+2)*size+tailIndex] = 1.0
 		} else {
 			copy(result[3*i*size:3*(i+1)*size], zeroChannel)
@@ -33,8 +34,22 @@ func boardToCNNInput(board rule.Board) []float32 {
 	// Food
 	foodIndex := 3 * len(board.Snakes) * size
 	for _, food := range board.Food.ToSlice() {
-		foodIndexPosition := food.Y*board.Width + food.X
+		foodIndexPosition := (food.Y+1)*width + (food.X + 1)
 		result[foodIndex+foodIndexPosition] = 1.0
+	}
+	// Walls
+	wallIndex := foodIndex + size
+	for x := 0; x < width; x++ {
+		wallTopIndex := x
+		wallBottomIndex := (height-1)*width + x
+		result[wallIndex+wallTopIndex] = 1.0
+		result[wallIndex+wallBottomIndex] = 1.0
+	}
+	for y := 0; y < height; y++ {
+		wallLeftIndex := y * width
+		wallRightIndex := y*width + (width - 1)
+		result[wallIndex+wallLeftIndex] = 1.0
+		result[wallIndex+wallRightIndex] = 1.0
 	}
 	return result
 }

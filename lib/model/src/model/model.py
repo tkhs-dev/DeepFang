@@ -10,9 +10,12 @@ class EvaluatorModel(nn.Module):
     def __init__(self, boardsize: Tuple[int, int], num_snakes: int):
         super(EvaluatorModel, self).__init__()
 
+        self.size = boardsize
+        self.num_snakes = num_snakes
+
         feature_input = 2 * num_snakes
 
-        self.cnn_input_shape = (3 * num_snakes + 1, boardsize[0], boardsize[1])
+        self.cnn_input_shape = (3 * num_snakes + 2, boardsize[0] + 2, boardsize[1] + 2)
         self.feature_input_shape = (feature_input,)
         self.actor_output_shape = (4,)
         self.critic_output_shape = (1,)
@@ -20,7 +23,7 @@ class EvaluatorModel(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.cnn = nn.Sequential(
-            nn.Conv2d(3*num_snakes + 1, 16, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(3*num_snakes + 2, 16, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
@@ -32,7 +35,7 @@ class EvaluatorModel(nn.Module):
             nn.ReLU(),
         )
         self.fc_shared = nn.Sequential(
-            nn.Linear(64 * boardsize[0] * boardsize[1] + feature_input, 128),
+            nn.Linear(64 * (boardsize[0] + 2) * (boardsize[1] + 2) + feature_input, 128),
             nn.ReLU(),
             nn.Linear(128, 128),
         )
@@ -62,7 +65,7 @@ class EvaluatorModel(nn.Module):
     def get_action_and_value(self, board_states, feature_states):
         """行動と価値を取得"""
         action_logits, value = self.forward(board_states, feature_states)
-        dist = Categorical(logits=F.softmax(action_logits, dim=-1))
+        dist = Categorical(logits=action_logits)
         action = dist.sample()
         log_prob = dist.log_prob(action)
         return action, log_prob, value
@@ -70,7 +73,7 @@ class EvaluatorModel(nn.Module):
     def evaluate_actions(self, board_states, feature_states, actions):
         """行動を評価（PPO更新用）"""
         action_logits, values = self.forward(board_states, feature_states)
-        dist = Categorical(logits=F.softmax(action_logits, dim=-1))
+        dist = Categorical(logits=action_logits)
         log_probs = dist.log_prob(actions)
         entropy = dist.entropy()
         return log_probs, values, entropy

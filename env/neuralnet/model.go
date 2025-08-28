@@ -64,7 +64,7 @@ func (o *OnnxModel) Close() error {
 }
 
 func NewOnnxModel(modelData []byte, numSnakes int, width int, height int) (*OnnxModel, error) {
-	cnnInputShape := ort.NewShape(1, int64(numSnakes*3+1), int64(height), int64(width))
+	cnnInputShape := ort.NewShape(1, int64(numSnakes*3+2), int64(height+2), int64(width+2))
 	featureInputShape := ort.NewShape(1, int64(numSnakes*2))
 
 	cnnInputTensor, err := ort.NewEmptyTensor[float32](cnnInputShape)

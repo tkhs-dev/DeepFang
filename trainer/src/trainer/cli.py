@@ -67,6 +67,7 @@ def cli():
     # print("feature_state")
     # print(feature_state)
     # result = model.forward(board_state, feature_state)
+    # model = model.to("cuda")
     # model.to_onnx("output.onnx")
     # print(result)
 
@@ -84,4 +85,4 @@ def cli():
 
     # EnvClientは外部から渡される想定
     trainer = PPOTrainer(client, agent, env_args)
-    trainer.train(n_iterations=5000)
+    trainer.train(n_iterations=5000, steps_per_iteration=4096)

@@ -32,7 +32,7 @@ func main() {
 		panic(err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.MaxRecvMsgSize(8 * 1024 * 1024))
 
 	grpc_gen.RegisterEnvServiceServer(s, server.NewServer())
 
