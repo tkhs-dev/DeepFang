@@ -13,7 +13,7 @@ type GameContext struct {
 type Client interface {
 	OnStartCallback(ctx *GameContext)
 	OnMoveCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake) rule.Direction
-	OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, result uint32)
+	OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, turn int, result uint32)
 }
 
 func (ctx *GameContext) SetValue(key string, value any) {
@@ -55,5 +55,5 @@ func (s SimpleSafeClient) OnMoveCallback(ctx *GameContext, board *rule.Board, sn
 	return action
 }
 
-func (s SimpleSafeClient) OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, result uint32) {
+func (s SimpleSafeClient) OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, turn int, result uint32) {
 }

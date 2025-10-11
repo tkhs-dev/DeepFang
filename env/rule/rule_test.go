@@ -914,3 +914,35 @@ func TestExecute_ソロ_負け(t *testing.T) {
 		t.Errorf("Execute() ended mismatch: got %v, want %v", ended, expectEnded)
 	}
 }
+
+func TestExecute_ソロ_餓死(t *testing.T) {
+	got := *NewGame(Setting{
+		Width:  11,
+		Height: 11,
+	})
+	got.Board.placeSnake(Point{9, 4}, 2, 1)
+	result, ended, _ := got.Execute([]Direction{Right})
+
+	expected := NewBoardEditor(11, 11).
+		PlaceSnake([]Point{{10, 4}, {9, 4}}, 0).
+		KillSnakes(0).
+		Build()
+
+	if d := cmp.Diff(got.Board, expected); len(d) != 0 {
+		t.Errorf("Execute() mismatch (-got +expected):\n%s", d)
+	}
+
+	expectedResults := []uint32{
+		TurnResultDead | TurnResultLoss | TurnResultStarvation,
+	}
+	for i, res := range result {
+		if res != expectedResults[i] {
+			t.Errorf("Execute() result mismatch at index %d: got %b, want %b", i, res, expectedResults[i])
+		}
+	}
+
+	expectEnded := true
+	if ended != expectEnded {
+		t.Errorf("Execute() ended mismatch: got %v, want %v", ended, expectEnded)
+	}
+}

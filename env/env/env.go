@@ -17,7 +17,6 @@ type Experience struct {
 	Reward  float32
 	Action  int32
 	Done    bool
-	Uid     string
 }
 
 type EpisodeData struct {
@@ -64,7 +63,7 @@ func StartEpisode(arg *EpisodeArg, clients []Client) error {
 		for i, c := range clients {
 			board := game.Board.Copy()
 			snake := &board.Snakes[i]
-			c.OnTurnEndCallback(ctxs[i], &board, snake, results[i])
+			c.OnTurnEndCallback(ctxs[i], &board, snake, game.Turn, results[i])
 		}
 		if ended {
 			break

@@ -37,19 +37,32 @@ func boardToCNNInput(board rule.Board) []float32 {
 		foodIndexPosition := (food.Y+1)*width + (food.X + 1)
 		result[foodIndex+foodIndexPosition] = 1.0
 	}
-	// Walls
-	wallIndex := foodIndex + size
+	// Danger
+	dangerIndex := foodIndex + size
 	for x := 0; x < width; x++ {
 		wallTopIndex := x
 		wallBottomIndex := (height-1)*width + x
-		result[wallIndex+wallTopIndex] = 1.0
-		result[wallIndex+wallBottomIndex] = 1.0
+		result[dangerIndex+wallTopIndex] = 1.0
+		result[dangerIndex+wallBottomIndex] = 1.0
 	}
 	for y := 0; y < height; y++ {
 		wallLeftIndex := y * width
 		wallRightIndex := y*width + (width - 1)
-		result[wallIndex+wallLeftIndex] = 1.0
-		result[wallIndex+wallRightIndex] = 1.0
+		result[dangerIndex+wallLeftIndex] = 1.0
+		result[dangerIndex+wallRightIndex] = 1.0
+	}
+	for _, snake := range board.Snakes {
+		if snake.Alive {
+			for i, bodyPart := range snake.Body {
+				bodyIndex := (bodyPart.Y+1)*width + (bodyPart.X + 1)
+				if i == len(snake.Body)-1 {
+					result[dangerIndex+bodyIndex] = 0.5
+					continue
+				}
+				// Mark body parts as danger
+				result[dangerIndex+bodyIndex] = 1.0
+			}
+		}
 	}
 	return result
 }

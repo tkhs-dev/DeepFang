@@ -32,11 +32,18 @@ def from_grpc_board(board: BoardState, width: int, height: int, num_snakes: int)
     # food
     for food in board.food:
         state[num_snakes * 3, food.y + 1, food.x + 1] = 1.0
-    # walls (borders)
+    # dangers
     state[-1, 0, :] = 1.0
     state[-1, -1, :] = 1.0
     state[-1, :, 0] = 1.0
     state[-1, :, -1] = 1.0
+    for snake in board.snakes:
+        for segment in snake.body:
+            state[-1, segment.y + 1, segment.x + 1] = 1.0
+        # 0.5 for tail
+        if snake.body:
+            tail = snake.body[-1]
+            state[-1, tail.y + 1, tail.x + 1] = 0.5
 
     return state
 

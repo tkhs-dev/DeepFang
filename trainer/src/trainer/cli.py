@@ -72,9 +72,9 @@ def cli():
     # print(result)
 
     env_args = EnvArgs(
-        width=11,
-        height=11,
-        food_spawn_chance=25,
+        width=6,
+        height=6,
+        food_spawn_chance=0,
         minimum_food=3,
         snakes=["model:0"],
     )

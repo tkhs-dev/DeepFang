@@ -72,7 +72,7 @@ func (d *DeepFang) OnMoveCallback(ctx *GameContext, board *rule.Board, snake *ru
 	return action
 }
 
-func (d *DeepFang) OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, result uint32) {
+func (d *DeepFang) OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake *rule.Snake, turn int, result uint32) {
 	alreadyDone, found := ctx.GetValue("done")
 	if found && alreadyDone.(bool) {
 		return
@@ -85,6 +85,7 @@ func (d *DeepFang) OnTurnEndCallback(ctx *GameContext, board *rule.Board, snake 
 	done := (result & rule.TurnResultMaskResult) != rule.TurnResultContinue
 	if done {
 		ctx.SetValue("done", true)
+		println(turn, calculateReward(board, snake, result), result&rule.TurnResultMaskCause == rule.TurnResultStarvation)
 	}
 	stepData := &Experience{
 		State: &State{
@@ -153,7 +154,7 @@ func logProb(logits []float32, action int) float32 {
 func calculateReward(board *rule.Board, snake *rule.Snake, result uint32) float32 {
 	reward := 0.0
 	if (result & rule.TurnResultMaskAlive) == rule.TurnResultAlive {
-		reward += 0.5 // Small positive reward for surviving the turn
+		reward += 0.1 // Small positive reward for surviving the turn
 	} else {
 		if snake.Length > 2 && snake.Head.Equal(snake.Body[2]) {
 			// 自殺ペナルティ
@@ -173,9 +174,9 @@ func calculateReward(board *rule.Board, snake *rule.Snake, result uint32) float3
 	if (result & rule.TurnResultMaskFood) == rule.TurnResultFoodEaten {
 		const (
 			maxHealth = 100
-			threshold = 50
-			a         = 0.5 // 体力ゼロ時の最大正報酬
-			b         = 0.1 // 体力満タン時の最大負報酬（小さい値にする）
+			threshold = 30
+			a         = 1   // 体力ゼロ時の最大正報酬
+			b         = 0.3 // 体力満タン時の最大負報酬（小さい値にする）
 		)
 
 		h := float64(snake.Health)

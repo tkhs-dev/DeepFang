@@ -68,9 +68,9 @@ tasks:
     desc: Run the trainer
     silent: true
     cmds:
-      - uv run --package runner runner -w 11 -ht 11 -s 1 {{.CLI_ARGS}}
+      - uv run --package runner runner -w 6 -ht 6 -s 1 {{.CLI_ARGS}}
 
   play:
     desc: Play a game against your bot
     cmds:
-      - battlesnake play -W 11 -H 11 --foodSpawnChance 25 --minimumFood 3 --url http://localhost:8000 --browser solo {{.CLI_ARGS}}
+      - battlesnake play -W 6 -H 6 --foodSpawnChance 0 --minimumFood 3 --url http://localhost:8000 --browser solo {{.CLI_ARGS}}

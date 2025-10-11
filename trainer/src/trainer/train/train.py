@@ -25,7 +25,7 @@ class PPOAgent:
         self.max_grad_norm = max_grad_norm
 
         # ネットワークの初期化
-        self.policy = EvaluatorModel((11, 11), 1)
+        self.policy = EvaluatorModel((6, 6), 1)
         self.optimizer = optim.Adam(self.policy.parameters(), lr=lr)
 
         # デバイスの設定
@@ -69,7 +69,7 @@ class PPOAgent:
             next_value = values[t]
 
         return advantages, returns
-    flg = False
+
     def update(self, experiences: List[Experience], n_epochs: int = 4, batch_size: int = 64):
         """PPO更新"""
         # データを結合
@@ -92,6 +92,7 @@ class PPOAgent:
         advantages = advantages.to(self.device)
         returns = returns.to(self.device)
 
+        entropies = []
         # 複数エポック更新
         for _ in range(n_epochs):
             # バッチサイズでシャッフル
@@ -113,6 +114,8 @@ class PPOAgent:
                     batch_board_states, batch_feature_states, batch_actions
                 )
 
+                entropies.append(entropy.mean().item())
+
                 # 重要度比を計算
                 ratio = torch.exp(new_log_probs - batch_old_log_probs)
 
@@ -122,17 +125,7 @@ class PPOAgent:
                 actor_loss = -torch.min(surr1, surr2).mean()
 
                 # 価値関数損失
-                with warnings.catch_warnings(record=True) as w:
-                    warnings.simplefilter("always")  # 全ての警告を捕捉
-                    critic_loss = F.mse_loss(values.squeeze(-1), batch_returns)
-
-                    if len(w) > 0 or self.flg:
-                        print(f"Warning during MSE loss computation")
-                        print(start_idx, end_idx)
-                        print(values.squeeze(-1), values.squeeze())
-                        print(w[0].message)
-                        self.flg = True
-
+                critic_loss = F.mse_loss(values.squeeze(-1), batch_returns)
 
                 # エントロピー損失
                 entropy_loss = -entropy.mean()
@@ -145,6 +138,7 @@ class PPOAgent:
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.policy.parameters(), self.max_grad_norm)
                 self.optimizer.step()
+        print(f"Mean entropy: {sum(entropies)/len(entropies):.4f}")
 
 class PPOTrainer:
     """PPO訓練クラス"""
@@ -173,17 +167,16 @@ class PPOTrainer:
             )
 
             # PPO更新
-            self.agent.update(experiences=experiences, n_epochs=4, batch_size=64)
+            self.agent.update(experiences=experiences, n_epochs=4, batch_size=4096)
 
             # 統計情報の計算
             total_reward = sum(exp.rewards.sum().item() for exp in experiences)
             avg_reward = total_reward / len(experiences) if experiences else 0
 
-            print(f"Average Reward: {avg_reward:.2f}, Total Reward: {total_reward:.2f}")
+            print(f"Average Reward: {avg_reward:.2f}")
 
             # 定期的にモデルを保存
             if (iteration + 1) % 50 == 0:
                 torch.save(self.agent.policy.state_dict(), f"./models/ppo_model_iter{iteration + 1}.pth")
-                print(f"Saved model at iteration {iteration + 1}")
 
         print("Training completed!")

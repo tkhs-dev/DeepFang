@@ -7,6 +7,7 @@ import (
 	"golib/rule"
 	grpc_gen "golib/server/grpc"
 	"golib/server/service"
+	"maps"
 	"strconv"
 	"time"
 
@@ -96,6 +97,12 @@ func (s Server) CollectExperience(request *grpc_gen.CollectExperienceRequest, g 
 			return grpcStatus.Err()
 		}
 		return status.Error(codes.Internal, "failed to collect experiences")
+	}
+	for model := range maps.Values(models) {
+		err := model.Close()
+		if err != nil {
+			return status.Error(codes.Internal, "failed to close model: "+err.Error())
+		}
 	}
 	return nil
 }

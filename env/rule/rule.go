@@ -478,7 +478,7 @@ func (rpb *RandomPositionBucket) Take(rand Rand) (Point, error) {
 }
 
 func PlaceSnakesRandomly(b *Board, rand Rand, snakeSettings []SnakeSetting) error {
-	for i := 0; i < len(b.Snakes); i++ {
+	for i := 0; i < len(snakeSettings); i++ {
 		unoccupiedPoints := removeCenterCoord(b, GetEvenUnoccupiedPoints(b))
 		if len(unoccupiedPoints) <= 0 {
 			return fmt.Errorf("no unoccupied points available to place snake %d", i)

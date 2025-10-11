@@ -48,11 +48,17 @@ class DeepFang(ISnake):
         # food
         for food in state['board']['food']:
             board_tensor[self.num_snakes * 3, food['y'] + 1, food['x'] + 1] = 1.0
-        # walls
+        # dangers
         board_tensor[self.num_snakes * 3 + 1, 0, :] = 1.0
         board_tensor[self.num_snakes * 3 + 1, -1, :] = 1.0
         board_tensor[self.num_snakes * 3 + 1, :, 0] = 1.0
         board_tensor[self.num_snakes * 3 + 1, :, -1] = 1.0
+        for snake in state['board']['snakes']:
+            for body in snake['body']:
+                board_tensor[self.num_snakes * 3 + 1, body['y'] + 1, body['x'] + 1] = 1.0
+            # 0.5 for tail
+            tail = snake['body'][-1]
+            board_tensor[self.num_snakes * 3 + 1, tail['y'] + 1, tail['x'] + 1] = 0.5
 
         return board_tensor.unsqueeze(0), features_tensor.unsqueeze(0)
 
@@ -78,7 +84,7 @@ class DeepFang(ISnake):
             policy_logits, _ = self.model(board_tensor.to(self.device), features_tensor.to(self.device))
             policy = torch.softmax(policy_logits, dim=-1)
             # パーセント表示(小数第二位) パーセントもつける
-            print("Policy:", ", ".join([f"{p*100:.2f}%" for p in policy.squeeze().cpu().numpy()]))
+            print(state["turn"] ,":", ", ".join([f"{p*100:.2f}%" for p in policy.squeeze().cpu().numpy()]))
             action = torch.argmax(policy, dim=-1).item()
         return Direction.from_index(action)
 
